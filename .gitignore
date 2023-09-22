@@ -1,5 +1,6 @@
 build
 *.sh
+.vscode
 
 # Prerequisites
 *.d

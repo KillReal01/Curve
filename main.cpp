@@ -1,107 +1,25 @@
 ﻿#define _USE_MATH_DEFINES
 
+#include "curve.hpp"
+
+#include <omp.h>
+
 #include <iostream>
 #include <vector>
 #include <memory>
 #include <cmath>
 #include <algorithm>
-
-struct Point3d {
-    double x;
-    double y;
-    double z;
-
-    Point3d() : x(0), y(0), z(0) {}
-    Point3d(double x, double y, double z) : x(x), y(y), z(z) {}
-    Point3d(const Point3d& other) = default;
-    Point3d& operator=(const Point3d& other) = default;
-
-    friend std::ostream& operator<<(std::ostream& s, Point3d& p) {
-        s << "( " << p.x << ", " << p.y << ", " << p.z << " )";
-        return s;
-    }
-};
-
-
-class Curve {
-public:
-    virtual Point3d getPoint3d(double t) = 0;
-    virtual Point3d getDerivative(double t) = 0;
-    virtual ~Curve() {}
-};
-
-
-class Ellipse : public Curve {
-public:
-    Ellipse(double radius_x, double radius_y) : radius_x(radius_x), radius_y(radius_y) {}
-
-    Point3d getPoint3d(double t) override {
-        return Point3d(radius_x * cos(t), radius_y * sin(t), 0);
-    }
-
-    Point3d getDerivative(double t) override {
-        return Point3d(-radius_x * sin(t), radius_y * cos(t), 0);
-    }
-
-    virtual ~Ellipse() {}
-
-protected:
-    double radius_x;
-
-private:
-    double radius_y;
-};
-
-
-class Circle : public Ellipse {
-public:
-    Circle(double radius) : Ellipse(radius, radius) {}
-
-    double getRadius() {
-        return radius_x;
-    }
-
-    Point3d getPoint3d(double t) override {
-
-        return Point3d(radius_x * cos(t), radius_x * sin(t), 0);
-    }
-
-    virtual ~Circle() {}
-};
-
-class Helix : public Circle {
-public:
-    Helix(double radius, double step) : Circle(radius), step(step) {}
-
-    Point3d getPoint3d(double t) override {
-        return Point3d(radius_x * cos(t), radius_x * sin(t), step * t);
-    }
-
-    Point3d getDerivative(double t) override {
-        return Point3d(-radius_x * sin(t), radius_x * cos(t), step);
-    }
-
-    virtual ~Helix() {}
-
-private:
-    double step;
-};
-
-
-namespace {
-    bool compareByRadius(const std::shared_ptr<Circle>& a, const std::shared_ptr<Circle>& b) {
-        return a->getRadius() < b->getRadius();
-    }
-}
+#include <chrono>
+#include <cstddef>
 
 
 int main() {
     srand(time(NULL));
-    int n = 10;
+    size_t n = 1'000'000;
 
-    // 2. init data
+    // 2.
     std::vector<std::shared_ptr<Curve>> vec;
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         std::shared_ptr<Curve> ptr;
         switch (rand() % 3) {
         case 0:
@@ -118,14 +36,14 @@ int main() {
     }
 
     // 3. 
-    double t = M_PI_4;
-    for (const auto& item : vec) {
-        Point3d tmp;
-        tmp = item->getPoint3d(t);
-        std::cout << "Point: " << tmp << "\n";
-        tmp = item->getDerivative(t);
-        std::cout << "Derivative: " << tmp << "\n\n";
-    }
+    // double t = M_PI_4;
+    // for (const auto& item : vec) {
+    //     Point3d tmp;
+    //     tmp = item->getPoint3d(t);
+    //     std::cout << "Point: " << tmp << "\n";
+    //     tmp = item->getDerivative(t);
+    //     std::cout << "Derivative: " << tmp << "\n\n";
+    // }
 
     // 4.
     std::vector<std::shared_ptr<Circle>> circle_vec;
@@ -136,15 +54,46 @@ int main() {
     }
 
     // 5.
-    std::sort(circle_vec.begin(), circle_vec.end(), compareByRadius);
+    std::sort(circle_vec.begin(), circle_vec.end(), circle::compareByRadius);
 
     // 6.
     double totalRadiusSum = 0;
+
+    auto start_time = std::chrono::high_resolution_clock::now();
     for (const auto& circle : circle_vec) {
         totalRadiusSum += circle->getRadius();
     }
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+
+    std::cout << "Sum: " << totalRadiusSum << ", time: " << duration.count() << "\n";
 
     // 8.
+    double totalRadiusSumMP = 0;
+    int num_threads = omp_get_max_threads();
+    int vector_size = circle_vec.size(); 
+
+    start_time = std::chrono::high_resolution_clock::now();
+    #pragma omp parallel num_threads(num_threads)
+    {
+        double local_sum = 0;
+        int thread_id = omp_get_thread_num();
+        int chunk_size = vector_size / num_threads;
+        int start = thread_id * chunk_size;
+        int end = (thread_id == num_threads - 1) ? vector_size : start + chunk_size;
+
+        for (int i = start; i < end; i++) {
+            local_sum += circle_vec[i]->getRadius();
+        }
+
+        #pragma omp critical
+        totalRadiusSumMP += local_sum;
+    }
+    end_time = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+
+    std::cout << "OpenMP sum: " << totalRadiusSumMP << ", time: " << duration.count() << "\n";
+
 
     return 0;
 }
