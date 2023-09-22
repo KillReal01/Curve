@@ -1,7 +1,6 @@
 ﻿#define _USE_MATH_DEFINES
 
 #include "curve.hpp"
-
 #include <omp.h>
 
 #include <iostream>
@@ -10,7 +9,6 @@
 #include <cmath>
 #include <algorithm>
 #include <chrono>
-#include <cstddef>
 
 
 int main() {

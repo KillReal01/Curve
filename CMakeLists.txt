@@ -6,10 +6,15 @@ set(CMAKE_CXX_STANDARD 14)
 find_package(OpenMP REQUIRED)
 
 include_directories(
-	${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src
 )
 
-add_executable(prog main.cpp)
+file(GLOB SOURCE_FILES
+    "main.cpp"
+    "src/*.cpp"
+)
+
+add_executable(prog ${SOURCE_FILES})
 if(OpenMP_CXX_FOUND)
     target_link_libraries(prog PRIVATE OpenMP::OpenMP_CXX)
 endif()
