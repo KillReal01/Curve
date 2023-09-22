@@ -2,7 +2,6 @@
 #include <vector>
 #include <memory>
 #include <cmath>
-#include <algorithm>
 
 
 struct Point3d {
@@ -12,13 +11,13 @@ struct Point3d {
 
     Point3d();
     Point3d(double x, double y, double z);
-    Point3d(const Point3d& other) = default;
-    Point3d& operator=(const Point3d& other) = default;
-    friend std::ostream& operator<<(std::ostream& s, Point3d& p);
+    Point3d(const Point3d&) = default;
+    Point3d& operator=(const Point3d&) = default;
+    friend std::ostream& operator<<(std::ostream& s, const Point3d& p);
 };
 
 
-class Curve {
+class Curve{
 public:
     virtual Point3d getPoint3d(double t) const = 0;
     virtual Point3d getDerivative(double t) const = 0;
@@ -28,7 +27,10 @@ public:
 
 class Ellipse : public Curve {
 public:
+    Ellipse();
     Ellipse(double radius_x, double radius_y);
+    Ellipse(const Ellipse&) = default;
+    Ellipse& operator=(const Ellipse&) = default;
     Point3d getPoint3d(double t) const override;
     Point3d getDerivative(double t) const override;
     virtual ~Ellipse() {}
@@ -43,7 +45,10 @@ private:
 
 class Circle : public Ellipse {
 public:
+    Circle();
     Circle(double radius);
+    Circle(const Circle&) = default;
+    Circle& operator=(const Circle&) = default;
     double getRadius() const;
     Point3d getPoint3d(double t)const override;
     virtual ~Circle() {}
@@ -51,7 +56,10 @@ public:
 
 class Helix : public Circle {
 public:
+    Helix();
     Helix(double radius, double step);
+    Helix(const Helix&) = default;
+    Helix& operator=(const Helix&) = default;
     Point3d getPoint3d(double t) const override;
     Point3d getDerivative(double t) const override;
     virtual ~Helix() {}

@@ -4,20 +4,21 @@
 #include <vector>
 #include <memory>
 #include <cmath>
-#include <algorithm>
 
 // Point3d
 Point3d::Point3d() : x(0), y(0), z(0) {}
 
 Point3d::Point3d(double x, double y, double z) : x(x), y(y), z(z) {}
 
-std::ostream& operator<<(std::ostream& s, Point3d& p) {
+std::ostream& operator<<(std::ostream& s, const Point3d& p) {
     s << "( " << p.x << ", " << p.y << ", " << p.z << " )";
     return s;
 }
 
 
 // Ellipse
+Ellipse::Ellipse(): radius_x(1), radius_y(1){}
+
 Ellipse::Ellipse(double radius_x, double radius_y) : radius_x(radius_x), radius_y(radius_y) {}
 
 Point3d Ellipse::getPoint3d(double t) const {
@@ -30,6 +31,8 @@ Point3d Ellipse::getDerivative(double t) const {
 
 
 // Circle
+Circle::Circle(): Ellipse() {}
+
 Circle::Circle(double radius) : Ellipse(radius, radius) {}
 
 double Circle::getRadius() const{
@@ -41,7 +44,9 @@ Point3d Circle::getPoint3d(double t) const {
 }
 
 
-//Hellix
+//Helix
+Helix::Helix() : Circle(), step(0.1){}
+
 Helix::Helix(double radius, double step) : Circle(radius), step(step) {}
 
 Point3d Helix::getPoint3d(double t) const {
