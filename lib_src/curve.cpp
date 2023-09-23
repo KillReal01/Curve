@@ -1,8 +1,5 @@
 ﻿#include "curve.hpp"
 
-#include <iostream>
-#include <vector>
-#include <memory>
 #include <cmath>
 
 // Point3d

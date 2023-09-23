@@ -1,6 +1,4 @@
-﻿#define _USE_MATH_DEFINES
-
-#include "curve.hpp"
+﻿#include "curve.hpp"
 #include <omp.h>
 
 #include <iostream>
@@ -8,12 +6,12 @@
 #include <memory>
 #include <cmath>
 #include <algorithm>
-#include <chrono>
 
+#define _USE_MATH_DEFINES
 
 int main() {
     srand(time(NULL));
-    size_t n = 1'000'000;
+    size_t n = 15;
 
     // 2.
     std::vector<std::shared_ptr<Curve>> vec;
@@ -34,14 +32,14 @@ int main() {
     }
 
     // 3. 
-    // double t = M_PI_4;
-    // for (const auto& item : vec) {
-    //     Point3d tmp;
-    //     tmp = item->getPoint3d(t);
-    //     std::cout << "Point: " << tmp << "\n";
-    //     tmp = item->getDerivative(t);
-    //     std::cout << "Derivative: " << tmp << "\n\n";
-    // }
+    double t = M_PI_4;
+    for (const auto& item : vec) {
+        Point3d tmp;
+        tmp = item->getPoint3d(t);
+        std::cout << "Point: " << tmp << "\n";
+        tmp = item->getDerivative(t);
+        std::cout << "Derivative: " << tmp << "\n\n";
+    }
 
     // 4.
     std::vector<std::shared_ptr<Circle>> circle_vec;
@@ -56,22 +54,16 @@ int main() {
 
     // 6.
     double totalRadiusSum = 0;
-
-    auto start_time = std::chrono::high_resolution_clock::now();
     for (const auto& circle : circle_vec) {
         totalRadiusSum += circle->getRadius();
     }
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-
-    std::cout << "Sum: " << totalRadiusSum << ", time: " << duration.count() << "\n";
+    std::cout << "Sum: " << totalRadiusSum <<  "\n";
 
     // 8.
     double totalRadiusSumMP = 0;
     int num_threads = omp_get_max_threads();
     int vector_size = circle_vec.size(); 
 
-    start_time = std::chrono::high_resolution_clock::now();
     #pragma omp parallel num_threads(num_threads)
     {
         double local_sum = 0;
@@ -87,11 +79,7 @@ int main() {
         #pragma omp critical
         totalRadiusSumMP += local_sum;
     }
-    end_time = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-
-    std::cout << "OpenMP sum: " << totalRadiusSumMP << ", time: " << duration.count() << "\n";
-
+    std::cout << "OpenMP sum: " << totalRadiusSumMP << "\n";
 
     return 0;
 }
